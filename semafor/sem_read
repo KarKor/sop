@@ -1,0 +1,41 @@
+#include <stdio.h>
+#include <string.h>
+#include <unistd.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+
+#define SIZE 128
+#define KEY 1234
+
+struct sharememory
+{
+    char text[100];
+    int sem;
+};
+
+int main()
+{
+    int id = shmget(KEY, SIZE, 0666 | IPC_CREAT); // tworzenie pamieci
+    if (id == -1)
+        perror("shmget");
+
+    struct sharememory *ptr = (struct sharememory *)shmat(id, NULL, 0); // przypisanie pamieci do zmiennej ptr
+    if (ptr == (void *)(-1))
+        perror("shmat");
+
+    while (1)
+    {
+        if (ptr->sem == 1)
+        {
+            if (strcmp(ptr->text, "CIEPLO") == 0 || strcmp(ptr->text, "ZIMNO") == 0)
+            {
+                printf("Odczytano: %s\n", ptr->text);
+            }
+            else
+            {
+                printf("Nieznany stan: %s\n", ptr->text);
+            }
+        }
+        sleep(1);
+    }
+}

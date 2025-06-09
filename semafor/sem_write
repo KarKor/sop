@@ -1,0 +1,39 @@
+#include <stdio.h>
+#include <string.h>
+#include <unistd.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+
+#define SIZE 128
+#define KEY 1234
+
+struct sharememory
+{
+    char text[100];
+    int sem;
+};
+
+int main()
+{
+    int id = shmget(KEY, SIZE, 0666 | IPC_CREAT);
+    if (id == -1)
+        perror("shmget");
+
+    struct sharememory *ptr = (struct sharememory *)shmat(id, NULL, 0); // przypisanie pamieci do zmiennej ptr
+    if (ptr == (void *)(-1))
+        perror("shmat");
+    {
+        while (1)
+        {
+            ptr->sem = 0; // zamkniecie semafora
+            strcpy(ptr->text, "CIEPLO");
+            ptr->sem = 1; // otwarcie semafora
+            sleep(1);
+
+            ptr->sem = 0;
+            strcpy(ptr->text, "ZIMNO");
+            ptr->sem = 1;
+            sleep(1);
+        }
+    }
+}
