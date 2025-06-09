@@ -1,0 +1,44 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/ipc.h>
+#include <sys/msg.h>
+#include <unistd.h>
+#define MAX 10
+
+struct mesg_buffer {
+    long mesg_type;
+    char mesg_text[100];
+} message;
+
+
+int main() {   
+    key_t key;
+    int msgid;
+
+    msgid = msgget(key, 0666 | IPC_CREAT);
+    message.mesg_type = 1;
+
+    pid_t pid = fork();
+    if (pid < 0 ) {
+        exit(1);
+    }
+
+    if(pid == 0) {
+    printf("Write Data: ");
+    fgets(message.mesg_text, MAX, stdin);
+
+    msgsnd(msgid, &message, sizeof(message), 0);
+
+    printf("Data Sent: %s \n", message.mesg_text);
+    }
+    else {
+    msgrcv(msgid, &message, sizeof(message), 1, 0);
+
+    printf("Data Received: %s \n", message.mesg_text);
+    }
+
+    msgctl(msgid, IPC_RMID, NULL);
+    
+
+    return 0;
+}
