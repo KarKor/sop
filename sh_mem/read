@@ -15,7 +15,7 @@ int main() {
     if (ptr == (char*)(-1)) perror("shmat");
 
     while (1) {//odczut z shm w nieskonczonej petli
-        // strcmp zwraca 0 jesli napisy sa rowne
+        // strcmp zwraca 0 jesli napisy sa takie same
         if (strcmp(ptr, "CIEPLO") == 0 || strcmp(ptr, "ZIMNO") == 0) {
             printf("odczytano: %s\n", ptr);
         } else {
