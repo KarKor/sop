@@ -5,3 +5,7 @@ WORKDIR /usr/src/app
 COPY . .
 ENV zmienna=1
 CMD [ "python", "-m", "http.server" ]
+
+
+//https://docs.docker.com/get-started/workshop/02_our_app/
+//https://docs.docker.com/compose/gettingstarted/
