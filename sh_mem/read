@@ -1,0 +1,26 @@
+#include <stdio.h>
+#include <string.h>
+#include <unistd.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+
+#define SIZE 100
+#define KEY 1234
+
+int main() {
+    int id = shmget(KEY, SIZE, 0666 | IPC_CREAT);
+    if (id == -1) perror("shmget");
+
+    char* ptr = (char*) shmat(id, NULL, 0);
+    if (ptr == (char*)(-1)) perror("shmat");
+
+    while (1) {
+        // strcmp zwraca 0 jesli napisy sa rowne
+        if (strcmp(ptr, "CIEPLO") == 0 || strcmp(ptr, "ZIMNO") == 0) {
+            printf("odczytano: %s\n", ptr);
+        } else {
+            printf("niepoprawny napis");
+        }
+        sleep(1);
+    }
+}

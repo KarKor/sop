@@ -1,0 +1,25 @@
+#include <stdio.h>
+#include <string.h>
+#include <unistd.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+
+#define SIZE 1
+#define KEY 1234
+
+int main() {
+    int id = shmget(KEY, SIZE, 0666 | IPC_CREAT);
+    if (id == -1) perror("shmget");
+
+    char* ptr = (char*) shmat(id, NULL, 0);
+    if (ptr == (char*)(-1)) perror("shmat");
+
+    while (1) {
+        strcpy(ptr, "CIEPLO");
+        sleep(1);
+        strcpy(ptr, "ZIMNO");
+        sleep(1);
+    }
+    // Usunięcie
+    shmctl(id, IPC_RMID, NULL);
+}
