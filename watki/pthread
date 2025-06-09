@@ -1,0 +1,63 @@
+#include <stdio.h>
+#include <pthread.h>
+#include <unistd.h>
+
+// Zmienna globalna
+int global_counter = 0;
+
+// Tablica do wyświetlenia
+int array[10] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+
+// Mutex do synchronizacji dostępu do zmiennej globalnej
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+
+// Funkcja wykonywana przez wątek
+void* thread_function(void* arg) {
+    int* arr = (int*)arg;
+
+    // Wyświetlenie tablicy
+    printf("Tablica w wątku: ");
+    for (int i = 0; i < 10; i++) {
+        printf("%d ", arr[i]);
+    }
+    printf("\n");
+
+    // Inkrementacja zmiennej globalnej 10 razy z użyciem mutexa
+    for (int i = 0; i < 10; i++) {
+        pthread_mutex_lock(&mutex);
+        global_counter++;
+        printf("Wątek: global_counter = %d\n", global_counter);
+        pthread_mutex_unlock(&mutex);
+        usleep(100000); // 0.1 sekundy dla symulacji pracy
+    }
+
+    return NULL;
+}
+
+int main() {
+    pthread_t thread;
+
+    // Tworzenie wątku i przekazanie tablicy jako argument
+    if (pthread_create(&thread, NULL, thread_function, (void*)array) != 0) {
+        perror("pthread_create");
+        return 1;
+    }
+
+    // Równoległa inkrementacja zmiennej globalnej przez proces główny
+    for (int i = 0; i < 10; i++) {
+        pthread_mutex_lock(&mutex);
+        global_counter++;
+        printf("Główny: global_counter = %d\n", global_counter);
+        pthread_mutex_unlock(&mutex);
+        usleep(100000); // 0.1 sekundy
+    }
+
+    // Czekamy na zakończenie wątku
+    pthread_join(thread, NULL);
+
+    // Można też anulować wątek (jeśli nie został zakończony)
+    // pthread_cancel(thread);
+
+    printf("Koniec programu. Wartość global_counter = %d\n", global_counter);
+    return 0;
+}

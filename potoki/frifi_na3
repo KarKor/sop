@@ -1,0 +1,71 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <string.h>
+#include <sys/wait.h>
+
+int main() {    //program, tworzący 2 procesy zapisujące do potoku i jeden odczytujący 
+    int pipefd[2];
+    pid_t writer1, writer2, reader;
+
+    if (pipe(pipefd) == -1) {
+        perror("pipe");
+        exit(EXIT_FAILURE);
+    }
+
+    writer1 = fork();
+    if (writer1 == -1) {
+        perror("fork");
+        exit(EXIT_FAILURE);
+    }
+
+    if (writer1 == 0) {
+        close(pipefd[0]);
+        const char *msg1 = "message 1\n";
+        write(pipefd[1], msg1, strlen(msg1));
+        close(pipefd[1]);
+        exit(EXIT_SUCCESS);
+    }
+
+    writer2 = fork();
+    if (writer2 == -1) {
+        perror("fork");
+        exit(EXIT_FAILURE);
+    }
+
+    if (writer2 == 0) {
+        close(pipefd[0]);
+        const char *msg2 = "message 2\n";
+        write(pipefd[1], msg2, strlen(msg2));
+        close(pipefd[1]);
+        exit(EXIT_SUCCESS);
+    }
+
+    reader = fork();
+    if (reader == -1) {
+        perror("fork");
+        exit(EXIT_FAILURE);
+    }
+
+    if (reader == 0) {
+        close(pipefd[1]);
+        char buffer[256];
+        ssize_t bytesRead;
+
+        while ((bytesRead = read(pipefd[0], buffer, sizeof(buffer) - 1)) > 0) {
+            buffer[bytesRead] = '\0';
+            printf("Czytelnik odebrał: %s", buffer);
+        }
+
+        close(pipefd[0]);
+        exit(EXIT_SUCCESS);
+    }
+    close(pipefd[0]);
+    close(pipefd[1]);
+
+    wait(NULL);
+    wait(NULL);
+    wait(NULL);
+
+    return 0;
+}

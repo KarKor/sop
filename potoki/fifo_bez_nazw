@@ -1,0 +1,39 @@
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <stdio.h>
+
+int main()  //tworzenie potoku bez połączeń nazwanych
+{
+	FILE* file;
+
+	pid_t child1, child2;
+	int twoPipe[2];
+	char line[50] = {};
+	pipe(twoPipe);
+
+	child1 = fork();
+	child2 = fork();
+	
+	if(child1 == 0)
+	{
+		file = fdopen(twoPipe[0], "w"); //zapis do potoku
+		printf("Hello!\n0");
+		fclose(file);	
+	}
+
+	if(child2 == 0)
+	{
+		file = fdopen(twoPipe[1], "r");  //odczyt z potoku
+		scanf("%s", line);
+		fprintf(file, "%s", line);
+		fflush(file);
+		fclose(file);
+	}
+	else
+	{
+		wait(NULL);
+	}
+
+	return 0;
+}
